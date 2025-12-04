@@ -11,12 +11,14 @@ $min_price = $_GET['min_price'] ?? '';
 $max_price = $_GET['max_price'] ?? '';
 $sort = $_GET['sort'] ?? 'newest';
 
-// GANTI bagian query products dengan ini:
-// Build query dengan multi-kategori
-$query = "SELECT DISTINCT p.*, c.nama_kategori 
+// Build base query - FIXED: Gunakan subquery untuk kategori
+$query = "SELECT p.*, 
+                 (SELECT c.nama_kategori 
+                  FROM product_categories pc 
+                  JOIN categories c ON pc.category_id = c.id 
+                  WHERE pc.product_id = p.id 
+                  ORDER BY c.id LIMIT 1) as nama_kategori
           FROM products p 
-          LEFT JOIN product_categories pc ON p.id = pc.product_id
-          LEFT JOIN categories c ON pc.category_id = c.id 
           WHERE p.status = 'active' AND p.is_available_online = 1";
 
 $params = [];
@@ -31,7 +33,8 @@ if(!empty($search)) {
 }
 
 if(!empty($category_id)) {
-    $conditions[] = "pc.category_id = ?";
+    // Untuk filter kategori, gunakan EXISTS
+    $conditions[] = "EXISTS (SELECT 1 FROM product_categories pc WHERE pc.product_id = p.id AND pc.category_id = ?)";
     $params[] = $category_id;
 }
 
@@ -85,9 +88,9 @@ try {
     $products = [];
 }
 
-// Get total count for pagination - FIXED VERSION
-$count_query = "SELECT COUNT(*) as total FROM products p 
-                LEFT JOIN categories c ON p.category_id = c.id 
+// Get total count for pagination - FIXED: Query yang sama tanpa pagination
+$count_query = "SELECT COUNT(*) as total 
+                FROM products p 
                 WHERE p.status = 'active' AND p.is_available_online = 1";
 
 $count_params = [];
@@ -102,7 +105,7 @@ if(!empty($search)) {
 }
 
 if(!empty($category_id)) {
-    $count_conditions[] = "p.category_id = ?";
+    $count_conditions[] = "EXISTS (SELECT 1 FROM product_categories pc WHERE pc.product_id = p.id AND pc.category_id = ?)";
     $count_params[] = $category_id;
 }
 
@@ -250,7 +253,7 @@ $categories = $categories_stmt->fetchAll(PDO::FETCH_ASSOC);
                                 <h3 class="product-name"><?php echo $product['nama_produk']; ?></h3>
                                 <p class="text-gray-600 text-sm mb-2"><?php echo $product['deskripsi_pendek']; ?></p>
                                 <p class="text-gray-500 text-xs mb-3">
-                                    <i class="fas fa-tag mr-1"></i><?php echo $product['nama_kategori']; ?>
+                                    <i class="fas fa-tag mr-1"></i><?php echo $product['nama_kategori'] ?: 'Uncategorized'; ?>
                                 </p>
                                 
                                 <?php if($product['stok'] <= 0): ?>

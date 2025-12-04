@@ -1,217 +1,497 @@
-// Main JavaScript for FreshMart Pro
+/**
+ * Main JavaScript File for FreshMart Pro
+ * Handles UI interactions, modals, notifications, and cart functionality
+ */
+
+// DOM Ready Function
 document.addEventListener('DOMContentLoaded', function() {
-    initializeCartSystem();
-    initializeSearch();
-    initializeForms();
-    initializeCustomModals();
+    // Initialize all interactive components
+    initMobileMenu();
+    initDropdowns();
+    initModals();
+    initForms();
+    initNotifications();
+    
+    // Add animation classes
+    addAnimationClasses();
 });
 
-// Cart Management System
-function initializeCartSystem() {
-    // Add to cart functionality
-    const addToCartButtons = document.querySelectorAll('.add-to-cart');
+// Mobile Menu Toggle
+function initMobileMenu() {
+    const mobileMenuButton = document.getElementById('mobileMenuButton');
+    const mobileMenu = document.getElementById('mobileMenu');
     
-    addToCartButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const productId = this.dataset.productId;
-            const productName = this.dataset.productName;
-            const productPrice = this.dataset.productPrice;
-            
-            addToCart(productId, productName, productPrice, 1);
+    if (mobileMenuButton && mobileMenu) {
+        mobileMenuButton.addEventListener('click', function() {
+            mobileMenu.classList.toggle('hidden');
+            // Toggle icon
+            const icon = this.querySelector('i');
+            if (icon.classList.contains('fa-bars')) {
+                icon.classList.replace('fa-bars', 'fa-times');
+            } else {
+                icon.classList.replace('fa-times', 'fa-bars');
+            }
         });
-    });
-    
-    // Cart count update
-    updateCartCount();
-}
-
-function addToCart(productId, productName, productPrice, quantity = 1) {
-    const formData = new FormData();
-    formData.append('add_to_cart', 'true');
-    formData.append('product_id', productId);
-    formData.append('quantity', quantity);
-    
-    fetch('cart.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.text())
-    .then(() => {
-        showToast(`${productName} added to cart!`, 'success');
-        updateCartCount();
-    })
-    .catch(error => {
-        console.error('Error adding to cart:', error);
-        showToast('Error adding product to cart', 'error');
-    });
-}
-
-function updateCartCount() {
-    fetch('includes/cart_count.php')
-        .then(response => response.json())
-        .then(data => {
-            const cartBadges = document.querySelectorAll('.cart-badge');
-            cartBadges.forEach(badge => {
-                if (data.count > 0) {
-                    badge.textContent = data.count;
-                    badge.style.display = 'inline-block';
-                } else {
-                    badge.style.display = 'none';
+        
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!mobileMenu.contains(event.target) && !mobileMenuButton.contains(event.target)) {
+                mobileMenu.classList.add('hidden');
+                const icon = mobileMenuButton.querySelector('i');
+                if (icon.classList.contains('fa-times')) {
+                    icon.classList.replace('fa-times', 'fa-bars');
                 }
-            });
-        })
-        .catch(error => console.error('Error updating cart count:', error));
-}
-
-// Search functionality
-function initializeSearch() {
-    const searchInput = document.getElementById('productSearch');
-    if (searchInput) {
-        searchInput.addEventListener('input', debounce(function() {
-            performSearch(this.value);
-        }, 300));
+            }
+        });
     }
 }
 
-function performSearch(query) {
-    if (query.length < 2) return;
+// Dropdown Menus
+function initDropdowns() {
+    const dropdownButtons = document.querySelectorAll('.dropdown-button');
     
-    // This would typically make an AJAX request to search endpoint
-    console.log('Searching for:', query);
+    dropdownButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const dropdown = this.nextElementSibling;
+            
+            // Close other dropdowns
+            document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                if (menu !== dropdown) {
+                    menu.classList.add('hidden');
+                }
+            });
+            
+            // Toggle current dropdown
+            dropdown.classList.toggle('hidden');
+        });
+    });
+    
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function() {
+        document.querySelectorAll('.dropdown-menu').forEach(menu => {
+            menu.classList.add('hidden');
+        });
+    });
 }
 
-// Form handling
-function initializeForms() {
-    const forms = document.querySelectorAll('form');
-    forms.forEach(form => {
-        form.addEventListener('submit', function(e) {
-            const submitButton = this.querySelector('button[type="submit"]');
-            if (submitButton) {
-                submitButton.disabled = true;
-                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
+// Modal Functions
+function initModals() {
+    // Open modal buttons
+    const modalButtons = document.querySelectorAll('[data-modal-toggle]');
+    
+    modalButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const modalId = this.getAttribute('data-modal-toggle');
+            const modal = document.getElementById(modalId);
+            
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.body.style.overflow = 'hidden'; // Prevent scrolling
+            }
+        });
+    });
+    
+    // Close modal buttons
+    const closeButtons = document.querySelectorAll('[data-modal-hide]');
+    
+    closeButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const modalId = this.getAttribute('data-modal-hide');
+            const modal = document.getElementById(modalId);
+            
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.style.overflow = 'auto'; // Restore scrolling
+            }
+        });
+    });
+    
+    // Close modal when clicking outside
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.add('hidden');
+                this.classList.remove('flex');
+                document.body.style.overflow = 'auto';
+            }
+        });
+    });
+    
+    // Close modal with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            modals.forEach(modal => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.style.overflow = 'auto';
+            });
+        }
+    });
+}
+
+// Form Validation and Handling
+function initForms() {
+    // Password toggle visibility
+    const passwordToggles = document.querySelectorAll('.password-toggle');
+    
+    passwordToggles.forEach(toggle => {
+        toggle.addEventListener('click', function() {
+            const passwordInput = this.previousElementSibling;
+            const icon = this.querySelector('i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        });
+    });
+    
+    // File input preview
+    const fileInputs = document.querySelectorAll('input[type="file"][data-preview]');
+    
+    fileInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            const previewId = this.getAttribute('data-preview');
+            const preview = document.getElementById(previewId);
+            const file = this.files[0];
+            
+            if (file && preview) {
+                const reader = new FileReader();
                 
-                // Re-enable button after 3 seconds in case of error
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.classList.remove('hidden');
+                };
+                
+                reader.readAsDataURL(file);
+            }
+        });
+    });
+    
+    // Form submission with loading state
+    const forms = document.querySelectorAll('form[data-loading]');
+    
+    forms.forEach(form => {
+        form.addEventListener('submit', function() {
+            const submitButton = this.querySelector('[type="submit"]');
+            if (submitButton) {
+                const originalText = submitButton.innerHTML;
+                submitButton.innerHTML = `
+                    <i class="fas fa-spinner fa-spin mr-2"></i>
+                    Processing...
+                `;
+                submitButton.disabled = true;
+                
+                // Restore button after 5 seconds (in case of error)
                 setTimeout(() => {
+                    submitButton.innerHTML = originalText;
                     submitButton.disabled = false;
-                    submitButton.innerHTML = submitButton.innerHTML.replace('<i class="fas fa-spinner fa-spin mr-2"></i>', '');
-                }, 3000);
+                }, 5000);
             }
         });
     });
 }
 
-// Custom Modal System
-function initializeCustomModals() {
-    // Create modal container if not exists
-    if (!document.getElementById('customModal')) {
-        const modalHTML = `
-            <div id="customModal" class="modal-overlay hidden">
-                <div class="modal-container">
-                    <div class="modal-header">
-                        <h3 id="modalTitle">Confirmation</h3>
-                        <button class="modal-close" onclick="closeModal()">
-                            <i class="fas fa-times"></i>
+// Notification System
+function initNotifications() {
+    // Auto-hide alerts after 5 seconds
+    const autoHideAlerts = document.querySelectorAll('.alert[data-auto-hide]');
+    
+    autoHideAlerts.forEach(alert => {
+        setTimeout(() => {
+            alert.style.opacity = '0';
+            alert.style.transform = 'translateY(-10px)';
+            setTimeout(() => alert.remove(), 300);
+        }, 5000);
+    });
+    
+    // Close alert buttons
+    const closeButtons = document.querySelectorAll('.alert-close');
+    
+    closeButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const alert = this.closest('.alert');
+            alert.style.opacity = '0';
+            alert.style.transform = 'translateY(-10px)';
+            setTimeout(() => alert.remove(), 300);
+        });
+    });
+}
+
+// Animation Classes
+function addAnimationClasses() {
+    // Add animation to cards on scroll
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+    
+    const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('animate-fade-in-up');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+    
+    // Observe elements with animation class
+    const animatedElements = document.querySelectorAll('.animate-on-scroll');
+    animatedElements.forEach(element => {
+        observer.observe(element);
+    });
+    
+    // Add hover effects to interactive elements
+    const interactiveElements = document.querySelectorAll('.btn, .card, .product-card');
+    interactiveElements.forEach(element => {
+        element.classList.add('transition-all', 'duration-200', 'ease-in-out');
+    });
+}
+
+// Custom Confirm Modal with Icon (DEFAULT ICON: trash)
+function showConfirmModal(title, message, confirmCallback, iconClass = 'fas fa-trash') {
+    // Remove existing modal if any
+    const existingModal = document.getElementById('customConfirmModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Create modal HTML
+    const modalHTML = `
+        <div id="customConfirmModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-md w-full transform transition-all duration-300 scale-100 opacity-100">
+                <div class="p-6 text-center">
+                    <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                        <i class="${iconClass} text-red-600 text-xl"></i>
+                    </div>
+                    
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">${title}</h3>
+                    <div class="text-gray-600 mb-6">${message}</div>
+                    
+                    <div class="flex space-x-3 justify-center">
+                        <button type="button" 
+                                class="btn btn-outline px-6 py-2 cancel-btn hover:bg-gray-50 transition">
+                            Cancel
                         </button>
-                    </div>
-                    <div class="modal-body">
-                        <p id="modalMessage">Are you sure?</p>
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
-                        <button class="btn btn-danger" id="modalConfirm">Confirm</button>
+                        <button type="button" 
+                                class="btn btn-danger px-6 py-2 confirm-btn bg-red-600 hover:bg-red-700 text-white transition">
+                            Confirm
+                        </button>
                     </div>
                 </div>
             </div>
-        `;
-        document.body.insertAdjacentHTML('beforeend', modalHTML);
-    }
-}
-
-function showConfirmModal(title, message, confirmCallback) {
-    const modal = document.getElementById('customModal');
-    const modalTitle = document.getElementById('modalTitle');
-    const modalMessage = document.getElementById('modalMessage');
-    const modalConfirm = document.getElementById('modalConfirm');
-    
-    modalTitle.textContent = title;
-    modalMessage.textContent = message;
-    
-    // Remove existing event listeners
-    const newConfirm = modalConfirm.cloneNode(true);
-    modalConfirm.parentNode.replaceChild(newConfirm, modalConfirm);
-    
-    // Add new event listener
-    newConfirm.addEventListener('click', function() {
-        confirmCallback();
-        closeModal();
-    });
-    
-    modal.classList.remove('hidden');
-}
-
-function closeModal() {
-    const modal = document.getElementById('customModal');
-    modal.classList.add('hidden');
-}
-
-// Close modal when clicking outside
-document.addEventListener('click', function(e) {
-    const modal = document.getElementById('customModal');
-    if (e.target === modal) {
-        closeModal();
-    }
-});
-
-// Toast Notification System
-function showToast(message, type = 'info') {
-    // Create toast container if not exists
-    let container = document.querySelector('.toast-container');
-    if (!container) {
-        container = document.createElement('div');
-        container.className = 'toast-container';
-        document.body.appendChild(container);
-    }
-    
-    // Create toast element
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    
-    const icons = {
-        success: 'fa-check-circle',
-        error: 'fa-exclamation-circle',
-        warning: 'fa-exclamation-triangle',
-        info: 'fa-info-circle'
-    };
-    
-    toast.innerHTML = `
-        <div class="toast-icon">
-            <i class="fas ${icons[type] || icons.info}"></i>
         </div>
-        <div class="toast-content">
-            <div class="font-medium">${message}</div>
-        </div>
-        <button class="toast-close" onclick="this.parentElement.remove()">
-            <i class="fas fa-times"></i>
-        </button>
     `;
     
-    container.appendChild(toast);
+    // Add modal to body
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
     
-    // Animate in
-    setTimeout(() => toast.classList.add('show'), 100);
+    // Get modal element
+    const modal = document.getElementById('customConfirmModal');
     
-    // Auto remove after 5 seconds
+    // Add event listener to confirm button
+    document.querySelector('.confirm-btn').addEventListener('click', function() {
+        modal.remove();
+        if (typeof confirmCallback === 'function') {
+            confirmCallback();
+        }
+    });
+    
+    // Add event listener to cancel button
+    document.querySelector('.cancel-btn').addEventListener('click', function() {
+        modal.remove();
+    });
+    
+    // Close modal when clicking outside
+    modal.addEventListener('click', function(e) {
+        if (e.target === this) {
+            this.remove();
+        }
+    });
+    
+    // Close modal with Escape key
+    const closeWithEscape = function(e) {
+        if (e.key === 'Escape') {
+            modal.remove();
+            document.removeEventListener('keydown', closeWithEscape);
+        }
+    };
+    
+    document.addEventListener('keydown', closeWithEscape);
+    
+    // Remove event listener when modal is removed
+    modal.addEventListener('remove', function() {
+        document.removeEventListener('keydown', closeWithEscape);
+    });
+    
+    // Focus on confirm button for accessibility
     setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => {
-            if (toast.parentElement) {
-                toast.remove();
-            }
-        }, 300);
-    }, 5000);
+        document.querySelector('.cancel-btn').focus();
+    }, 100);
 }
 
-// Utility functions
+// Toast Notification System
+function showToast(message, type = 'success') {
+    // Remove existing toast if any
+    const existingToast = document.getElementById('customToast');
+    if (existingToast) {
+        existingToast.remove();
+    }
+    
+    // Type configuration
+    const typeConfig = {
+        success: { 
+            bg: 'bg-green-500', 
+            icon: 'fas fa-check-circle',
+            border: 'border-green-200'
+        },
+        error: { 
+            bg: 'bg-red-500', 
+            icon: 'fas fa-exclamation-circle',
+            border: 'border-red-200'
+        },
+        warning: { 
+            bg: 'bg-yellow-500', 
+            icon: 'fas fa-exclamation-triangle',
+            border: 'border-yellow-200'
+        },
+        info: { 
+            bg: 'bg-blue-500', 
+            icon: 'fas fa-info-circle',
+            border: 'border-blue-200'
+        }
+    };
+    
+    const config = typeConfig[type] || typeConfig.success;
+    
+    // Create toast HTML
+    const toastHTML = `
+        <div id="customToast" class="fixed top-4 right-4 ${config.bg} text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-3 z-50 border ${config.border} transform transition-all duration-300 translate-y-0 opacity-100 max-w-sm">
+            <i class="${config.icon} text-lg"></i>
+            <span class="flex-1">${message}</span>
+            <button type="button" class="toast-close ml-2 text-white hover:text-gray-200">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `;
+    
+    // Add toast to body
+    document.body.insertAdjacentHTML('beforeend', toastHTML);
+    
+    // Get toast element
+    const toast = document.getElementById('customToast');
+    
+    // Add close button event listener
+    toast.querySelector('.toast-close').addEventListener('click', function() {
+        hideToast(toast);
+    });
+    
+    // Auto hide after 5 seconds
+    const autoHide = setTimeout(() => {
+        hideToast(toast);
+    }, 5000);
+    
+    // Function to hide toast with animation
+    function hideToast(toastElement) {
+        clearTimeout(autoHide);
+        toastElement.style.transform = 'translateY(-20px)';
+        toastElement.style.opacity = '0';
+        setTimeout(() => {
+            if (toastElement.parentNode) {
+                toastElement.remove();
+            }
+        }, 300);
+    }
+    
+    // Pause auto-hide on hover
+    toast.addEventListener('mouseenter', () => {
+        clearTimeout(autoHide);
+    });
+    
+    toast.addEventListener('mouseleave', () => {
+        setTimeout(() => {
+            hideToast(toast);
+        }, 5000);
+    });
+}
+
+// Cart Functions
+function updateCartCount(count) {
+    const cartCountElements = document.querySelectorAll('.cart-count');
+    cartCountElements.forEach(element => {
+        // Animation effect
+        element.classList.add('animate-ping');
+        setTimeout(() => {
+            element.classList.remove('animate-ping');
+        }, 300);
+        
+        // Update count
+        element.textContent = count;
+        
+        // Show/hide based on count
+        if (count > 0) {
+            element.classList.remove('hidden');
+        } else {
+            element.classList.add('hidden');
+        }
+    });
+}
+
+// Product Quantity Controls
+function initQuantityControls() {
+    document.addEventListener('click', function(e) {
+        // Decrease quantity
+        if (e.target.closest('.decrease-quantity')) {
+            const button = e.target.closest('.decrease-quantity');
+            const input = button.nextElementSibling;
+            const min = parseInt(input.getAttribute('min')) || 1;
+            const currentValue = parseInt(input.value) || min;
+            
+            if (currentValue > min) {
+                input.value = currentValue - 1;
+                triggerEvent(input, 'change');
+            }
+        }
+        
+        // Increase quantity
+        if (e.target.closest('.increase-quantity')) {
+            const button = e.target.closest('.increase-quantity');
+            const input = button.previousElementSibling;
+            const max = parseInt(input.getAttribute('max')) || 999;
+            const currentValue = parseInt(input.value) || 1;
+            
+            if (currentValue < max) {
+                input.value = currentValue + 1;
+                triggerEvent(input, 'change');
+            }
+        }
+    });
+}
+
+// Helper function to trigger events
+function triggerEvent(element, eventName) {
+    if (document.createEvent) {
+        const event = document.createEvent('HTMLEvents');
+        event.initEvent(eventName, false, true);
+        element.dispatchEvent(event);
+    } else {
+        element.fireEvent('on' + eventName);
+    }
+}
+
+// Price Formatting
+function formatRupiah(amount) {
+    return 'Rp ' + new Intl.NumberFormat('id-ID').format(Math.round(amount));
+}
+
+// Debounce Function for Performance
 function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
@@ -224,45 +504,12 @@ function debounce(func, wait) {
     };
 }
 
-function formatCurrency(amount) {
-    return new Intl.NumberFormat('id-ID', {
-        style: 'currency',
-        currency: 'IDR',
-        minimumFractionDigits: 0
-    }).format(amount);
+// Export functions for global use (if using modules)
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        showConfirmModal,
+        showToast,
+        updateCartCount,
+        formatRupiah
+    };
 }
-
-// API functions
-class FreshMartAPI {
-    static async get(endpoint) {
-        try {
-            const response = await fetch(endpoint);
-            return await response.json();
-        } catch (error) {
-            console.error('API Error:', error);
-            throw error;
-        }
-    }
-    
-    static async post(endpoint, data) {
-        try {
-            const response = await fetch(endpoint, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data)
-            });
-            return await response.json();
-        } catch (error) {
-            console.error('API Error:', error);
-            throw error;
-        }
-    }
-}
-
-// Export functions for global use
-window.showToast = showToast;
-window.showConfirmModal = showConfirmModal;
-window.closeModal = closeModal;
-window.formatCurrency = formatCurrency;

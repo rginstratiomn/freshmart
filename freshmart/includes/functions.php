@@ -82,6 +82,7 @@ function uploadImage($file, $target_dir = "../uploads/") {
     }
 }
 
+// PASTIKAN FUNGSI INI ADA!
 function getCartItemCount() {
     if (isset($_SESSION['cart'])) {
         return array_sum($_SESSION['cart']);

@@ -54,59 +54,109 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
     
     if(empty($errors)) {
-        try {
-            $connection->beginTransaction();
-            
-            // Create user
-            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-            $insert_user = $connection->prepare("
-                INSERT INTO users (username, email, password, full_name, phone, role) 
-                VALUES (?, ?, ?, ?, ?, 'customer')
-            ");
-            
-            $insert_success = $insert_user->execute([
-                $email, 
-                $email, 
-                $hashed_password, 
-                $full_name, 
-                $phone
-            ]);
-            
-            if (!$insert_success) {
-                throw new Exception("Failed to create user account");
+        $max_retries = 3;
+        $retry_count = 0;
+        $registered = false;
+        
+        while ($retry_count < $max_retries && !$registered) {
+            try {
+                $retry_count++;
+                error_log("Registration attempt $retry_count for email: $email");
+                
+                // Set shorter timeout untuk transaction
+                $connection->exec("SET SESSION innodb_lock_wait_timeout = 5");
+                $connection->exec("SET SESSION wait_timeout = 30");
+                
+                $connection->beginTransaction();
+                
+                // Generate username dari email
+                $username = strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $email));
+                $username = substr($username, 0, 20); // Limit panjang username
+                
+                // Check if username already exists
+                $check_username = $connection->prepare("SELECT id FROM users WHERE username = ?");
+                $check_username->execute([$username]);
+                if($check_username->rowCount() > 0) {
+                    // Jika username sudah ada, tambahkan random number
+                    $username = $username . rand(100, 999);
+                }
+                
+                // Create user - FIXED: Optimize query
+                $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+                $insert_user = $connection->prepare("
+                    INSERT INTO users (username, email, password, full_name, phone, role, created_at, updated_at) 
+                    VALUES (?, ?, ?, ?, ?, 'customer', NOW(), NOW())
+                ");
+                
+                $insert_success = $insert_user->execute([
+                    $username, 
+                    $email, 
+                    $hashed_password, 
+                    $full_name, 
+                    $phone
+                ]);
+                
+                if (!$insert_success) {
+                    throw new Exception("Failed to create user account");
+                }
+                
+                $user_id = $connection->lastInsertId();
+                
+                // Create customer record - FIXED: Simplify
+                $referral_code = strtoupper(substr(md5(uniqid() . time()), 0, 8));
+                $insert_customer = $connection->prepare("
+                    INSERT INTO customers (user_id, referral_code, created_at, updated_at) 
+                    VALUES (?, ?, NOW(), NOW())
+                ");
+                
+                $customer_success = $insert_customer->execute([$user_id, $referral_code]);
+                
+                if (!$customer_success) {
+                    throw new Exception("Failed to create customer profile");
+                }
+                
+                // Commit transaction secepat mungkin
+                $connection->commit();
+                $registered = true;
+                
+                // Log activity (setelah commit berhasil)
+                logActivity($user_id, 'register', 'User', $user_id, 'New user registration');
+                
+                $_SESSION['success'] = "Registration successful! Please login to continue.";
+                redirect('login.php');
+                
+            } catch(PDOException $e) {
+                // Rollback transaction jika gagal
+                if ($connection->inTransaction()) {
+                    $connection->rollBack();
+                }
+                
+                error_log("Registration PDO error (attempt $retry_count): " . $e->getMessage());
+                
+                // Check if it's a lock timeout error
+                if (strpos($e->getMessage(), 'Lock wait timeout') !== false && $retry_count < $max_retries) {
+                    error_log("Lock timeout detected, retrying...");
+                    usleep(100000); // Tunggu 100ms sebelum retry
+                    continue;
+                }
+                
+                $errors[] = "Registration failed. Please try again. Error: " . $e->getMessage();
+                break;
+                
+            } catch(Exception $e) {
+                // Rollback transaction jika gagal
+                if ($connection->inTransaction()) {
+                    $connection->rollBack();
+                }
+                
+                error_log("Registration error (attempt $retry_count): " . $e->getMessage());
+                $errors[] = "Registration failed: " . $e->getMessage();
+                break;
             }
-            
-            $user_id = $connection->lastInsertId();
-            
-            // Create customer record
-            $referral_code = strtoupper(substr(md5(uniqid()), 0, 8));
-            $insert_customer = $connection->prepare("
-                INSERT INTO customers (user_id, referral_code) 
-                VALUES (?, ?)
-            ");
-            
-            $customer_success = $insert_customer->execute([$user_id, $referral_code]);
-            
-            if (!$customer_success) {
-                throw new Exception("Failed to create customer profile");
-            }
-            
-            // Log activity
-            logActivity($user_id, 'register', 'User', $user_id, 'New user registration');
-            
-            $connection->commit();
-            
-            $_SESSION['success'] = "Registration successful! Please login to continue.";
-            redirect('login.php');
-            
-        } catch(PDOException $e) {
-            $connection->rollBack();
-            error_log("Registration PDO error: " . $e->getMessage());
-            $errors[] = "Registration failed. Please try again. Error: " . $e->getMessage();
-        } catch(Exception $e) {
-            $connection->rollBack();
-            error_log("Registration error: " . $e->getMessage());
-            $errors[] = "Registration failed: " . $e->getMessage();
+        }
+        
+        if (!$registered && $retry_count >= $max_retries) {
+            $errors[] = "Registration failed after multiple attempts. Please try again later.";
         }
     }
 }
@@ -164,16 +214,26 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
             
             <div class="form-group">
                 <label for="password" class="form-label">Password</label>
-                <input type="password" id="password" name="password" required 
-                       class="form-input"
-                       placeholder="Enter your password (min. 6 characters)">
+                <div class="relative">
+                    <input type="password" id="password" name="password" required 
+                           class="form-input pr-10"
+                           placeholder="Enter your password (min. 6 characters)">
+                    <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-600 hover:text-gray-800 password-toggle">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
             </div>
             
             <div class="form-group">
                 <label for="confirm_password" class="form-label">Confirm Password</label>
-                <input type="password" id="confirm_password" name="confirm_password" required 
-                       class="form-input"
-                       placeholder="Confirm your password">
+                <div class="relative">
+                    <input type="password" id="confirm_password" name="confirm_password" required 
+                           class="form-input pr-10"
+                           placeholder="Confirm your password">
+                    <button type="button" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-600 hover:text-gray-800 password-toggle">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
             </div>
             
             <div class="form-group">
@@ -211,5 +271,29 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
             </a>
         </div>
     </div>
+
+    <script>
+        // Password toggle functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const passwordToggles = document.querySelectorAll('.password-toggle');
+            
+            passwordToggles.forEach(toggle => {
+                toggle.addEventListener('click', function() {
+                    const input = this.parentElement.querySelector('input');
+                    const icon = this.querySelector('i');
+                    
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        icon.classList.remove('fa-eye');
+                        icon.classList.add('fa-eye-slash');
+                    } else {
+                        input.type = 'password';
+                        icon.classList.remove('fa-eye-slash');
+                        icon.classList.add('fa-eye');
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 </html>
