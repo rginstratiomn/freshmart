@@ -20,52 +20,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['cart'][$product_id] = $quantity;
         }
         
-        $_SESSION['success'] = "Product added to cart!";
-        redirect('cart.php');
+        echo json_encode(['success' => true, 'message' => 'Product added to cart!']);
         exit;
     }
     
-    if (isset($_POST['update_cart'])) {
-        foreach ($_POST['quantities'] as $product_id => $quantity) {
-            $quantity = (int)$quantity;
-            if ($quantity <= 0) {
-                unset($_SESSION['cart'][$product_id]);
-            } else {
-                $_SESSION['cart'][$product_id] = $quantity;
-            }
+    if (isset($_POST['update_quantity'])) {
+        $product_id = (int)$_POST['product_id'];
+        $quantity = (int)$_POST['quantity'];
+        
+        if ($quantity <= 0) {
+            unset($_SESSION['cart'][$product_id]);
+        } else {
+            $_SESSION['cart'][$product_id] = $quantity;
         }
-        $_SESSION['success'] = "Cart updated successfully!";
-        redirect('cart.php');
+        
+        echo json_encode(['success' => true]);
         exit;
     }
     
     if (isset($_POST['apply_voucher'])) {
-        $voucher_code = sanitize($_POST['voucher_code']);
-        
-        // Validasi voucher
-        if (empty($voucher_code)) {
-            $_SESSION['error'] = "Please enter a voucher code";
-            redirect('cart.php');
-            exit;
-        }
+        $voucher_id = (int)$_POST['voucher_id'];
         
         $db = new Database();
         $connection = $db->getConnection();
         
         try {
-            // Check voucher validity
-            $voucher_query = "SELECT * FROM vouchers WHERE code = ? AND is_active = 1";
+            // Get voucher details
+            $voucher_query = "SELECT * FROM vouchers WHERE id = ? AND is_active = 1";
             $voucher_stmt = $connection->prepare($voucher_query);
-            $voucher_stmt->execute([$voucher_code]);
+            $voucher_stmt->execute([$voucher_id]);
             $voucher = $voucher_stmt->fetch(PDO::FETCH_ASSOC);
             
             if (!$voucher) {
-                $_SESSION['error'] = "Voucher code not found or inactive";
+                $_SESSION['error'] = "Voucher not found or inactive";
                 redirect('cart.php');
                 exit;
             }
             
-            // Check date validity (FIXED - proper date comparison)
+            // Check date validity
             $now = date('Y-m-d H:i:s');
             if ($now < $voucher['start_date'] || $now > $voucher['end_date']) {
                 $_SESSION['error'] = "Voucher has expired or not yet valid";
@@ -100,7 +92,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (isset($_SESSION['cart']) && !empty($_SESSION['cart'])) {
                 $product_ids = array_keys($_SESSION['cart']);
                 
-                // Calculate subtotal
                 foreach ($product_ids as $product_id) {
                     $quantity = $_SESSION['cart'][$product_id];
                     $product_query = "SELECT harga_jual FROM products WHERE id = ?";
@@ -198,9 +189,28 @@ if (isset($_SESSION['cart']) && !empty($_SESSION['cart'])) {
     }
 }
 
+// Get available vouchers
+$available_vouchers = [];
+if (!empty($cart_products)) {
+    $db = new Database();
+    $connection = $db->getConnection();
+    
+    $now = date('Y-m-d H:i:s');
+    $voucher_query = "SELECT * FROM vouchers 
+                      WHERE is_active = 1 
+                      AND start_date <= ? 
+                      AND end_date >= ?
+                      AND min_purchase <= ?
+                      ORDER BY discount_value DESC";
+    
+    $voucher_stmt = $connection->prepare($voucher_query);
+    $voucher_stmt->execute([$now, $now, $subtotal]);
+    $available_vouchers = $voucher_stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
 // Calculate totals
-$shipping_cost = 15000; // Default shipping cost
-$tax_amount = $subtotal * 0.1; // 10% tax
+$shipping_cost = 15000;
+$tax_amount = $subtotal * 0.1;
 $voucher_discount = 0;
 
 // Calculate voucher discount if applied
@@ -209,7 +219,6 @@ if (isset($_SESSION['voucher'])) {
     
     if ($voucher['discount_type'] === 'percentage') {
         $voucher_discount = $subtotal * ($voucher['discount_value'] / 100);
-        // Apply max discount if set
         if ($voucher['max_discount'] && $voucher_discount > $voucher['max_discount']) {
             $voucher_discount = $voucher['max_discount'];
         }
@@ -217,7 +226,6 @@ if (isset($_SESSION['voucher'])) {
         $voucher_discount = $voucher['discount_value'];
     }
     
-    // Ensure discount doesn't exceed subtotal
     if ($voucher_discount > $subtotal) {
         $voucher_discount = $subtotal;
     }
@@ -273,83 +281,69 @@ $grand_total = $subtotal + $shipping_cost + $tax_amount - $voucher_discount;
                             <h2 class="card-title">Cart Items (<?php echo $total_items; ?> items)</h2>
                         </div>
                         
-                        <form method="POST" id="cartForm">
-                            <div class="divide-y divide-gray-200">
-                                <?php foreach ($cart_products as $item): ?>
-                                <div class="p-6 flex items-center space-x-4" data-product-id="<?php echo $item['id']; ?>">
-                                    <img src="<?php echo $item['foto_utama'] ? 'uploads/' . $item['foto_utama'] : 'https://via.placeholder.com/80x80/3B82F6/FFFFFF?text=Product'; ?>" 
-                                         alt="<?php echo htmlspecialchars($item['nama_produk']); ?>" 
-                                         class="w-20 h-20 object-cover rounded-lg"
-                                         onerror="this.src='https://via.placeholder.com/80x80/3B82F6/FFFFFF?text=Product'">
-                                    
-                                    <div class="flex-1">
-                                        <h3 class="text-lg font-semibold text-gray-800"><?php echo htmlspecialchars($item['nama_produk']); ?></h3>
-                                        <p class="text-gray-600 product-price" data-price="<?php echo $item['harga_jual']; ?>">
-                                            <?php echo formatRupiah($item['harga_jual']); ?>
-                                        </p>
-                                        <p class="text-sm text-gray-500">Stock: <?php echo $item['stok']; ?></p>
-                                    </div>
-                                    
-                                    <div class="flex items-center space-x-4">
-                                        <div class="flex items-center border border-gray-300 rounded-lg">
-                                            <button type="button" 
-                                                    class="decrease-quantity w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition"
-                                                    data-product-id="<?php echo $item['id']; ?>"
-                                                    data-product-name="<?php echo htmlspecialchars($item['nama_produk']); ?>">
-                                                <i class="fas fa-minus"></i>
-                                            </button>
-                                            <input type="number" 
-                                                   name="quantities[<?php echo $item['id']; ?>]" 
-                                                   value="<?php echo $item['quantity']; ?>" 
-                                                   min="1" 
-                                                   max="<?php echo $item['stok']; ?>"
-                                                   class="quantity-input w-16 text-center border-0 py-2 focus:outline-none"
-                                                   data-product-id="<?php echo $item['id']; ?>"
-                                                   readonly>
-                                            <button type="button" 
-                                                    class="increase-quantity w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition"
-                                                    data-product-id="<?php echo $item['id']; ?>"
-                                                    data-max-stock="<?php echo $item['stok']; ?>">
-                                                <i class="fas fa-plus"></i>
-                                            </button>
-                                        </div>
-                                        
-                                        <div class="text-lg font-semibold text-gray-800 w-32 text-right item-total" data-product-id="<?php echo $item['id']; ?>">
-                                            <?php echo formatRupiah($item['total']); ?>
-                                        </div>
-                                        
-                                        <a href="#" 
-                                           class="text-red-500 hover:text-red-700 p-2 remove-item transition"
-                                           data-product-id="<?php echo $item['id']; ?>"
-                                           data-product-name="<?php echo htmlspecialchars($item['nama_produk']); ?>">
-                                            <i class="fas fa-trash"></i>
-                                        </a>
-                                    </div>
-                                </div>
-                                <?php endforeach; ?>
-                            </div>
-                            
-                            <div class="p-6 border-t border-gray-200 flex justify-between items-center">
-                                <a href="products.php" class="btn btn-outline">
-                                    <i class="fas fa-arrow-left mr-2"></i>Continue Shopping
-                                </a>
+                        <div class="divide-y divide-gray-200">
+                            <?php foreach ($cart_products as $item): ?>
+                            <div class="p-6 flex items-center space-x-4" data-product-id="<?php echo $item['id']; ?>">
+                                <img src="<?php echo $item['foto_utama'] ? 'uploads/' . $item['foto_utama'] : 'https://via.placeholder.com/80x80/3B82F6/FFFFFF?text=Product'; ?>" 
+                                     alt="<?php echo htmlspecialchars($item['nama_produk']); ?>" 
+                                     class="w-20 h-20 object-cover rounded-lg"
+                                     onerror="this.src='https://via.placeholder.com/80x80/3B82F6/FFFFFF?text=Product'">
                                 
-                                <div class="flex space-x-4">
-                                    <a href="#" class="btn btn-danger clear-cart">
-                                        <i class="fas fa-trash mr-2"></i>Clear Cart
-                                    </a>
+                                <div class="flex-1">
+                                    <h3 class="text-lg font-semibold text-gray-800"><?php echo htmlspecialchars($item['nama_produk']); ?></h3>
+                                    <p class="text-gray-600 product-price" data-price="<?php echo $item['harga_jual']; ?>">
+                                        <?php echo formatRupiah($item['harga_jual']); ?>
+                                    </p>
+                                    <p class="text-sm text-gray-500">Stock: <?php echo $item['stok']; ?></p>
+                                </div>
+                                
+                                <div class="flex items-center space-x-4">
+                                    <div class="flex items-center border border-gray-300 rounded-lg">
+                                        <button type="button" 
+                                                class="decrease-quantity w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition"
+                                                data-product-id="<?php echo $item['id']; ?>"
+                                                data-product-name="<?php echo htmlspecialchars($item['nama_produk']); ?>">
+                                            <i class="fas fa-minus"></i>
+                                        </button>
+                                        <input type="number" 
+                                               value="<?php echo $item['quantity']; ?>" 
+                                               min="1" 
+                                               max="<?php echo $item['stok']; ?>"
+                                               class="quantity-input w-16 text-center border-0 py-2 focus:outline-none"
+                                               data-product-id="<?php echo $item['id']; ?>"
+                                               readonly>
+                                        <button type="button" 
+                                                class="increase-quantity w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition"
+                                                data-product-id="<?php echo $item['id']; ?>"
+                                                data-max-stock="<?php echo $item['stok']; ?>">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
+                                    </div>
                                     
-                                    <button type="submit" name="update_cart" class="btn btn-primary" id="updateCartBtn">
-                                        <span class="btn-text">
-                                            <i class="fas fa-sync mr-2"></i>Update Cart
-                                        </span>
-                                        <span class="btn-spinner hidden">
-                                            <i class="fas fa-spinner fa-spin mr-2"></i>Updating...
-                                        </span>
-                                    </button>
+                                    <div class="text-lg font-semibold text-gray-800 w-32 text-right item-total" data-product-id="<?php echo $item['id']; ?>">
+                                        <?php echo formatRupiah($item['total']); ?>
+                                    </div>
+                                    
+                                    <a href="#" 
+                                       class="text-red-500 hover:text-red-700 p-2 remove-item transition"
+                                       data-product-id="<?php echo $item['id']; ?>"
+                                       data-product-name="<?php echo htmlspecialchars($item['nama_produk']); ?>">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
                                 </div>
                             </div>
-                        </form>
+                            <?php endforeach; ?>
+                        </div>
+                        
+                        <div class="p-6 border-t border-gray-200 flex justify-between items-center">
+                            <a href="products.php" class="btn btn-outline">
+                                <i class="fas fa-arrow-left mr-2"></i>Continue Shopping
+                            </a>
+                            
+                            <a href="#" class="btn btn-danger clear-cart">
+                                <i class="fas fa-trash mr-2"></i>Clear Cart
+                            </a>
+                        </div>
                     </div>
                 </div>
                 
@@ -361,49 +355,54 @@ $grand_total = $subtotal + $shipping_cost + $tax_amount - $voucher_discount;
                         </div>
                         
                         <div class="space-y-4">
-                            <!-- Voucher Code -->
+                            <!-- Voucher Section -->
                             <?php if (isset($_SESSION['voucher'])): ?>
                                 <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-                                    <div class="flex justify-between items-center mb-2">
-                                        <span class="font-semibold text-green-800">Voucher Applied</span>
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div class="flex-1">
+                                            <div class="flex items-center mb-1">
+                                                <i class="fas fa-ticket-alt text-green-600 mr-2"></i>
+                                                <span class="font-semibold text-green-800"><?php echo $_SESSION['voucher']['code']; ?></span>
+                                            </div>
+                                            <p class="text-green-600 text-sm">
+                                                <?php echo $_SESSION['voucher']['nama_voucher']; ?>
+                                            </p>
+                                            <p class="text-green-700 text-sm font-semibold mt-1">
+                                                Save <?php echo $_SESSION['voucher']['discount_type'] === 'percentage' ? 
+                                                      $_SESSION['voucher']['discount_value'] . '%' : 
+                                                      formatRupiah($_SESSION['voucher']['discount_value']); ?>
+                                            </p>
+                                        </div>
                                         <form method="POST" class="inline">
                                             <button type="submit" name="remove_voucher" class="text-red-500 hover:text-red-700 transition">
                                                 <i class="fas fa-times"></i>
                                             </button>
                                         </form>
                                     </div>
-                                    <p class="text-green-600 text-sm">
-                                        <?php echo $_SESSION['voucher']['code']; ?> - 
-                                        <?php echo $_SESSION['voucher']['discount_type'] === 'percentage' ? 
-                                              $_SESSION['voucher']['discount_value'] . '% off' : 
-                                              formatRupiah($_SESSION['voucher']['discount_value']) . ' off'; ?>
-                                    </p>
-                                    <?php if ($_SESSION['voucher']['discount_type'] === 'percentage' && $_SESSION['voucher']['max_discount']): ?>
-                                        <p class="text-green-500 text-xs">Max discount: <?php echo formatRupiah($_SESSION['voucher']['max_discount']); ?></p>
-                                    <?php endif; ?>
                                 </div>
                             <?php else: ?>
-                                <form method="POST" class="space-y-3" id="voucherForm">
-                                    <div class="form-group">
-                                        <label class="form-label">Voucher Code</label>
-                                        <div class="flex space-x-2">
-                                            <input type="text" 
-                                                   name="voucher_code" 
-                                                   id="voucherCodeInput"
-                                                   class="form-input flex-1" 
-                                                   placeholder="Enter voucher code">
-                                            <button type="submit" name="apply_voucher" class="btn btn-outline" id="applyVoucherBtn">
-                                                <span class="btn-text">Apply</span>
-                                                <span class="btn-spinner hidden">
-                                                    <i class="fas fa-spinner fa-spin"></i>
-                                                </span>
-                                            </button>
+                                <?php if (!empty($available_vouchers)): ?>
+                                    <button type="button" 
+                                            onclick="showVoucherModal()" 
+                                            class="w-full border-2 border-dashed border-blue-300 rounded-lg p-4 hover:border-blue-500 hover:bg-blue-50 transition text-left">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                                                <i class="fas fa-ticket-alt text-blue-600"></i>
+                                            </div>
+                                            <div class="flex-1">
+                                                <p class="font-semibold text-gray-800">Choose Promo</p>
+                                                <p class="text-sm text-gray-600"><?php echo count($available_vouchers); ?> voucher available</p>
+                                            </div>
+                                            <i class="fas fa-chevron-right text-gray-400"></i>
                                         </div>
-                                        <p class="text-xs text-gray-500 mt-1">
-                                            Try: <strong>WELCOME10</strong> (10% off, min Rp 100.000) or <strong>FREESHIP</strong> (Free shipping)
-                                        </p>
+                                    </button>
+                                <?php else: ?>
+                                    <div class="border-2 border-dashed border-gray-200 rounded-lg p-4 text-center">
+                                        <i class="fas fa-ticket-alt text-gray-300 text-2xl mb-2"></i>
+                                        <p class="text-sm text-gray-500">No vouchers available</p>
+                                        <p class="text-xs text-gray-400 mt-1">Add more items to unlock vouchers</p>
                                     </div>
-                                </form>
+                                <?php endif; ?>
                             <?php endif; ?>
                             
                             <!-- Price Breakdown -->
@@ -459,119 +458,159 @@ $grand_total = $subtotal + $shipping_cost + $tax_amount - $voucher_discount;
         <?php endif; ?>
     </div>
 
+    <!-- Voucher Modal -->
+    <div id="voucherModal" class="modal-overlay hidden">
+        <div class="modal-container max-w-2xl">
+            <div class="modal-header">
+                <h3 class="text-xl font-bold">Choose Promo</h3>
+                <button onclick="closeVoucherModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            <div class="modal-body max-h-96 overflow-y-auto">
+                <?php if (!empty($available_vouchers)): ?>
+                    <div class="space-y-3">
+                        <?php foreach ($available_vouchers as $voucher): ?>
+                        <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-500 hover:shadow-md transition cursor-pointer voucher-item"
+                             onclick="applyVoucher(<?php echo $voucher['id']; ?>)">
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0 w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mr-4">
+                                    <i class="fas fa-ticket-alt text-white text-2xl"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="font-bold text-gray-800 mb-1"><?php echo htmlspecialchars($voucher['nama_voucher']); ?></h4>
+                                    <p class="text-sm text-gray-600 mb-2"><?php echo htmlspecialchars($voucher['description']); ?></p>
+                                    <div class="flex items-center text-sm">
+                                        <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded font-semibold mr-2">
+                                            <?php echo $voucher['code']; ?>
+                                        </span>
+                                        <span class="text-green-600 font-semibold">
+                                            Save <?php echo $voucher['discount_type'] === 'percentage' ? 
+                                                  $voucher['discount_value'] . '%' : 
+                                                  formatRupiah($voucher['discount_value']); ?>
+                                        </span>
+                                    </div>
+                                    <?php if ($voucher['min_purchase'] > 0): ?>
+                                    <p class="text-xs text-gray-500 mt-2">
+                                        <i class="fas fa-info-circle mr-1"></i>
+                                        Min. purchase: <?php echo formatRupiah($voucher['min_purchase']); ?>
+                                    </p>
+                                    <?php endif; ?>
+                                    <?php if ($voucher['discount_type'] === 'percentage' && $voucher['max_discount']): ?>
+                                    <p class="text-xs text-gray-500">
+                                        <i class="fas fa-info-circle mr-1"></i>
+                                        Max discount: <?php echo formatRupiah($voucher['max_discount']); ?>
+                                    </p>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="flex-shrink-0">
+                                    <button class="btn btn-primary btn-sm">
+                                        Use
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php else: ?>
+                    <div class="text-center py-8">
+                        <i class="fas fa-ticket-alt text-gray-300 text-5xl mb-4"></i>
+                        <p class="text-gray-500">No vouchers available at the moment</p>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
     <?php include 'includes/footer.php'; ?>
 
-    <!-- Load main.js untuk custom modal -->
     <script src="assets/js/main.js"></script>
     <script>
-        // REAL-TIME CART UPDATE & MODAL CONFIRMATIONS
-        document.addEventListener('DOMContentLoaded', function() {
-            // Cart data untuk perhitungan
-            const cartData = {
-                shipping: <?php echo $shipping_cost; ?>,
-                taxRate: 0.1
-            };
+        // Cart Data
+        const cartData = {
+            shipping: <?php echo $shipping_cost; ?>,
+            taxRate: 0.1
+        };
+        
+        // Format currency
+        function formatRupiah(amount) {
+            return 'Rp ' + new Intl.NumberFormat('id-ID').format(Math.round(amount));
+        }
+        
+        // Update order summary
+        function updateOrderSummary() {
+            let subtotal = 0;
+            let totalItems = 0;
             
-            // Format currency helper
-            function formatRupiah(amount) {
-                return 'Rp ' + new Intl.NumberFormat('id-ID').format(Math.round(amount));
-            }
-            
-            // Calculate and update order summary
-            function updateOrderSummary() {
-                let subtotal = 0;
-                let totalItems = 0;
+            document.querySelectorAll('[data-product-id]').forEach(row => {
+                const productId = row.dataset.productId;
+                const input = row.querySelector('.quantity-input');
+                const priceElement = row.querySelector('.product-price');
                 
-                // Calculate from all cart items
-                document.querySelectorAll('[data-product-id]').forEach(row => {
-                    const productId = row.dataset.productId;
-                    const input = row.querySelector('.quantity-input');
-                    const priceElement = row.querySelector('.product-price');
+                if (input && priceElement) {
+                    const quantity = parseInt(input.value) || 0;
+                    const price = parseFloat(priceElement.dataset.price) || 0;
+                    const itemTotal = price * quantity;
                     
-                    if (input && priceElement) {
-                        const quantity = parseInt(input.value) || 0;
-                        const price = parseFloat(priceElement.dataset.price) || 0;
-                        const itemTotal = price * quantity;
-                        
-                        // Update item total
-                        const totalElement = row.querySelector(`.item-total[data-product-id="${productId}"]`);
-                        if (totalElement) {
-                            totalElement.textContent = formatRupiah(itemTotal);
-                        }
-                        
-                        subtotal += itemTotal;
-                        totalItems += quantity;
+                    const totalElement = row.querySelector(`.item-total[data-product-id="${productId}"]`);
+                    if (totalElement) {
+                        totalElement.textContent = formatRupiah(itemTotal);
                     }
-                });
-                
-                // Update summary
-                document.getElementById('totalItemsCount').textContent = totalItems;
-                document.getElementById('subtotalAmount').textContent = formatRupiah(subtotal);
-                
-                const tax = subtotal * cartData.taxRate;
-                document.getElementById('taxAmount').textContent = formatRupiah(tax);
-                
-                const grandTotal = subtotal + cartData.shipping + tax;
-                document.getElementById('grandTotalAmount').textContent = formatRupiah(grandTotal);
-            }
-            
-            // DECREASE QUANTITY
-            document.addEventListener('click', function(e) {
-                if (e.target.closest('.decrease-quantity')) {
-                    const button = e.target.closest('.decrease-quantity');
-                    const productId = button.dataset.productId;
-                    const productName = button.dataset.productName;
-                    const input = document.querySelector(`input[name="quantities[${productId}]"]`);
                     
-                    if (!input) return;
-                    
-                    const currentQuantity = parseInt(input.value);
-                    
-                    if (currentQuantity > 1) {
-                        input.value = currentQuantity - 1;
-                        updateOrderSummary();
-                    } else if (currentQuantity === 1) {
-                        showConfirmModal(
-                            'Remove Item',
-                            `Remove <strong>"${productName}"</strong> from cart?`,
-                            function() {
-                                window.location.href = `cart.php?remove=${productId}`;
-                            }
-                        );
-                    }
+                    subtotal += itemTotal;
+                    totalItems += quantity;
                 }
             });
             
-            // INCREASE QUANTITY
-            document.addEventListener('click', function(e) {
-                if (e.target.closest('.increase-quantity')) {
-                    const button = e.target.closest('.increase-quantity');
-                    const productId = button.dataset.productId;
-                    const maxStock = parseInt(button.dataset.maxStock);
-                    const input = document.querySelector(`input[name="quantities[${productId}]"]`);
-                    
-                    if (!input) return;
-                    
-                    const currentQuantity = parseInt(input.value);
-                    
-                    if (currentQuantity < maxStock) {
-                        input.value = currentQuantity + 1;
-                        updateOrderSummary();
-                    } else {
-                        showToast('Maximum stock reached', 'warning');
-                    }
-                }
-            });
+            document.getElementById('totalItemsCount').textContent = totalItems;
+            document.getElementById('subtotalAmount').textContent = formatRupiah(subtotal);
             
-            // REMOVE ITEM
-            document.addEventListener('click', function(e) {
-                if (e.target.closest('.remove-item')) {
-                    e.preventDefault();
-                    const link = e.target.closest('.remove-item');
-                    const productId = link.dataset.productId;
-                    const productName = link.dataset.productName;
-                    
+            const tax = subtotal * cartData.taxRate;
+            document.getElementById('taxAmount').textContent = formatRupiah(tax);
+            
+            const grandTotal = subtotal + cartData.shipping + tax;
+            document.getElementById('grandTotalAmount').textContent = formatRupiah(grandTotal);
+        }
+        
+        // Update quantity via AJAX
+        function updateQuantity(productId, quantity) {
+            fetch('cart.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `update_quantity=1&product_id=${productId}&quantity=${quantity}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateOrderSummary();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('Failed to update cart', 'error');
+            });
+        }
+        
+        // Event listeners
+        document.addEventListener('click', function(e) {
+            // Decrease quantity
+            if (e.target.closest('.decrease-quantity')) {
+                const button = e.target.closest('.decrease-quantity');
+                const productId = button.dataset.productId;
+                const productName = button.dataset.productName;
+                const input = document.querySelector(`input[data-product-id="${productId}"]`);
+                
+                if (!input) return;
+                
+                const currentQuantity = parseInt(input.value);
+                
+                if (currentQuantity > 1) {
+                    input.value = currentQuantity - 1;
+                    updateQuantity(productId, currentQuantity - 1);
+                } else if (currentQuantity === 1) {
                     showConfirmModal(
                         'Remove Item',
                         `Remove <strong>"${productName}"</strong> from cart?`,
@@ -580,47 +619,92 @@ $grand_total = $subtotal + $shipping_cost + $tax_amount - $voucher_discount;
                         }
                     );
                 }
-            });
-            
-            // CLEAR CART
-            document.addEventListener('click', function(e) {
-                if (e.target.closest('.clear-cart')) {
-                    e.preventDefault();
-                    showConfirmModal(
-                        'Clear Cart',
-                        'Remove all items from cart?<br><strong>This cannot be undone.</strong>',
-                        function() {
-                            window.location.href = 'cart.php?clear=1';
-                        }
-                    );
-                }
-            });
-            
-            // UPDATE CART BUTTON LOADING
-            const updateCartBtn = document.getElementById('updateCartBtn');
-            if (updateCartBtn) {
-                document.getElementById('cartForm').addEventListener('submit', function() {
-                    updateCartBtn.disabled = true;
-                    updateCartBtn.querySelector('.btn-text').classList.add('hidden');
-                    updateCartBtn.querySelector('.btn-spinner').classList.remove('hidden');
-                });
             }
             
-            // APPLY VOUCHER BUTTON LOADING
-            const applyVoucherBtn = document.getElementById('applyVoucherBtn');
-            if (applyVoucherBtn) {
-                document.getElementById('voucherForm').addEventListener('submit', function(e) {
-                    const input = document.getElementById('voucherCodeInput');
-                    if (!input.value.trim()) {
-                        e.preventDefault();
-                        showToast('Please enter a voucher code', 'warning');
-                        return;
+            // Increase quantity
+            if (e.target.closest('.increase-quantity')) {
+                const button = e.target.closest('.increase-quantity');
+                const productId = button.dataset.productId;
+                const maxStock = parseInt(button.dataset.maxStock);
+                const input = document.querySelector(`input[data-product-id="${productId}"]`);
+                
+                if (!input) return;
+                
+                const currentQuantity = parseInt(input.value);
+                
+                if (currentQuantity < maxStock) {
+                    input.value = currentQuantity + 1;
+                    updateQuantity(productId, currentQuantity + 1);
+                } else {
+                    showToast('Maximum stock reached', 'warning');
+                }
+            }
+            
+            // Remove item
+            if (e.target.closest('.remove-item')) {
+                e.preventDefault();
+                const link = e.target.closest('.remove-item');
+                const productId = link.dataset.productId;
+                const productName = link.dataset.productName;
+                
+                showConfirmModal(
+                    'Remove Item',
+                    `Remove <strong>"${productName}"</strong> from cart?`,
+                    function() {
+                        window.location.href = `cart.php?remove=${productId}`;
                     }
-                    
-                    applyVoucherBtn.disabled = true;
-                    applyVoucherBtn.querySelector('.btn-text').classList.add('hidden');
-                    applyVoucherBtn.querySelector('.btn-spinner').classList.remove('hidden');
-                });
+                );
+            }
+            
+            // Clear cart
+            if (e.target.closest('.clear-cart')) {
+                e.preventDefault();
+                showConfirmModal(
+                    'Clear Cart',
+                    'Remove all items from cart?<br><strong>This cannot be undone.</strong>',
+                    function() {
+                        window.location.href = 'cart.php?clear=1';
+                    }
+                );
+            }
+        });
+        
+        // Voucher Modal Functions
+        function showVoucherModal() {
+            document.getElementById('voucherModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeVoucherModal() {
+            document.getElementById('voucherModal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+        
+        function applyVoucher(voucherId) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = 'cart.php';
+            
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'apply_voucher';
+            input.value = '1';
+            
+            const voucherInput = document.createElement('input');
+            voucherInput.type = 'hidden';
+            voucherInput.name = 'voucher_id';
+            voucherInput.value = voucherId;
+            
+            form.appendChild(input);
+            form.appendChild(voucherInput);
+            document.body.appendChild(form);
+            form.submit();
+        }
+        
+        // Close modal when clicking outside
+        document.getElementById('voucherModal')?.addEventListener('click', function(e) {
+            if (e.target.id === 'voucherModal') {
+                closeVoucherModal();
             }
         });
     </script>

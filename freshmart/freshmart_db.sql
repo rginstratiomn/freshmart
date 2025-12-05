@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Nov 29, 2025 at 05:29 PM
+-- Generation Time: Dec 05, 2025 at 02:15 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -102,7 +102,25 @@ CREATE TABLE `activity_logs` (
 
 INSERT INTO `activity_logs` (`id`, `user_id`, `action`, `model_type`, `model_id`, `description`, `ip_address`, `user_agent`, `created_at`) VALUES
 (1, 1, 'login', 'User', 1, 'User logged in successfully', '127.0.0.1', NULL, '2025-11-29 14:00:50'),
-(2, 1, 'create', 'Product', 1, 'Created new product: Apel Fuji Premium', '127.0.0.1', NULL, '2025-11-29 14:00:50');
+(2, 1, 'create', 'Product', 1, 'Created new product: Apel Fuji Premium', '127.0.0.1', NULL, '2025-11-29 14:00:50'),
+(12, 1, 'login', 'User', 1, 'User logged in successfully', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-29 17:08:41'),
+(13, 1, 'logout', 'User', 1, 'User logged out', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-29 17:09:18'),
+(14, 2, 'login', 'User', 2, 'User logged in successfully', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-29 17:09:26'),
+(15, 2, 'logout', 'User', 2, 'User logged out', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-29 17:15:28'),
+(17, 1, 'login', 'User', 1, 'User logged in successfully', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-29 17:32:51'),
+(18, 1, 'logout', 'User', 1, 'User logged out', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-29 17:32:58'),
+(19, 2, 'login', 'User', 2, 'User logged in successfully', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-29 17:33:05'),
+(20, 2, 'logout', 'User', 2, 'User logged out', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-29 17:33:28'),
+(21, 15, 'register', 'User', 15, 'New user registration', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-30 13:09:02'),
+(22, 15, 'login', 'User', 15, 'User logged in successfully', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-30 13:09:16'),
+(23, 15, 'logout', 'User', 15, 'User logged out', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-30 13:09:45'),
+(24, 16, 'register', 'User', 16, 'New user registration', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-30 13:10:44'),
+(25, 15, 'login', 'User', 15, 'User logged in successfully', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-30 13:53:56'),
+(26, 15, 'logout', 'User', 15, 'User logged out', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-11-30 14:17:24'),
+(27, 1, 'login', 'User', 1, 'User logged in successfully', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-05 10:44:16'),
+(28, 1, 'logout', 'User', 1, 'User logged out', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-05 10:44:53'),
+(29, 2, 'login', 'User', 2, 'User logged in successfully', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-05 10:45:20'),
+(30, 2, 'logout', 'User', 2, 'User logged out', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36', '2025-12-05 10:46:43');
 
 -- --------------------------------------------------------
 
@@ -220,6 +238,16 @@ CREATE TABLE `contact_messages` (
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `contact_messages`
+--
+
+INSERT INTO `contact_messages` (`id`, `name`, `email`, `subject`, `message`, `status`, `created_at`) VALUES
+(1, 'vdbb', 'azizahputriregina@gmail.com', 'ewfewf', 'efwefwf', 'new', '2025-11-29 16:41:30'),
+(2, 'vdbb', 'azizahputriregina@gmail.com', 'ewfewf', 'efwefwf', 'new', '2025-11-29 16:41:39'),
+(3, 'vdbb', 'azizahputriregina@gmail.com', 'ewfewf', 'efwefwf', 'new', '2025-11-29 16:41:41'),
+(4, 'vdbb', 'azizahputriregina@gmail.com', 'ewfewf', 'efwefwf', 'new', '2025-11-29 16:42:06');
+
 -- --------------------------------------------------------
 
 --
@@ -245,7 +273,9 @@ CREATE TABLE `customers` (
 --
 
 INSERT INTO `customers` (`id`, `user_id`, `date_of_birth`, `gender`, `loyalty_points`, `total_spending`, `customer_tier`, `referral_code`, `referred_by`, `created_at`, `updated_at`) VALUES
-(1, 4, '1990-01-15', 'male', 1500, 2500000.00, 'gold', 'REF123456', NULL, '2025-11-29 14:00:50', '2025-11-29 14:00:50');
+(1, 4, '1990-01-15', 'male', 1500, 2500000.00, 'gold', 'REF123456', NULL, '2025-11-29 14:00:50', '2025-11-29 14:00:50'),
+(12, 15, NULL, NULL, 0, 0.00, 'bronze', '6466998B', NULL, '2025-11-30 13:09:02', '2025-11-30 13:09:02'),
+(13, 16, NULL, NULL, 0, 0.00, 'bronze', 'C3EB9433', NULL, '2025-11-30 13:10:44', '2025-11-30 13:10:44');
 
 -- --------------------------------------------------------
 
@@ -504,8 +534,8 @@ CREATE TABLE `products` (
 INSERT INTO `products` (`id`, `category_id`, `supplier_id`, `sku`, `barcode`, `nama_produk`, `slug`, `deskripsi_pendek`, `deskripsi_lengkap`, `harga_beli`, `harga_jual`, `stok`, `minimum_stok`, `satuan`, `berat`, `is_featured`, `is_available_online`, `foto_utama`, `status`, `views`, `sales_count`, `rating_average`, `created_at`, `updated_at`, `deleted_at`) VALUES
 (1, 6, 1, 'PRD-APL001', '8991002101011', 'Apel Fuji Premium', 'apel-fuji-premium', 'Apel Fuji segar import dengan rasa manis', 'Apel Fuji premium import dengan tekstur renyah dan rasa manis alami. Cocok untuk konsumsi langsung atau bahan salad buah.', 15000.00, 25000.00, 50, 10, 'kg', 1000.00, 1, 1, NULL, 'active', 0, 0, 0.0, '2025-11-29 14:00:50', '2025-11-29 14:00:50', NULL),
 (2, 6, 1, 'PRD-PIS001', '8991002101028', 'Pisang Ambon', 'pisang-ambon', 'Pisang Ambon segar lokal', 'Pisang Ambon segar dari petani lokal dengan rasa manis dan tekstur lembut.', 8000.00, 15000.00, 100, 20, 'kg', 1000.00, 0, 1, NULL, 'active', 0, 0, 0.0, '2025-11-29 14:00:50', '2025-11-29 14:00:50', NULL),
-(3, 7, 2, 'PRD-DGS001', '8991002101035', 'Daging Sapi Premium', 'daging-sapi-premium', 'Daging sapi segar kualitas premium', 'Daging sapi segar dengan marbling yang baik, cocok untuk steak atau rendang.', 85000.00, 120000.00, 25, 5, 'kg', 1000.00, 1, 1, NULL, 'active', 0, 0, 0.0, '2025-11-29 14:00:50', '2025-11-29 14:00:50', NULL),
-(4, 8, 2, 'PRD-DGA001', '8991002101042', 'Daging Ayam Fillet', 'daging-ayam-fillet', 'Daging ayam fillet tanpa tulang', 'Daging ayam fillet segar tanpa tulang, praktis untuk berbagai masakan.', 35000.00, 45000.00, 40, 10, 'kg', 1000.00, 0, 1, NULL, 'active', 0, 0, 0.0, '2025-11-29 14:00:50', '2025-11-29 14:00:50', NULL),
+(3, 7, 2, 'PRD-DGS001', '8991002101035', 'Daging Sapi Premium', 'daging-sapi-premium', 'Daging sapi segar kualitas premium', 'Daging sapi segar dengan marbling yang baik, cocok untuk steak atau rendang.', 85000.00, 120000.00, 24, 5, 'kg', 1000.00, 1, 1, NULL, 'active', 0, 0, 0.0, '2025-11-29 14:00:50', '2025-12-05 10:46:12', NULL),
+(4, 8, 2, 'PRD-DGA001', '8991002101042', 'Daging Ayam Fillet', 'daging-ayam-fillet', 'Daging ayam fillet tanpa tulang', 'Daging ayam fillet segar tanpa tulang, praktis untuk berbagai masakan.', 35000.00, 45000.00, 39, 10, 'kg', 1000.00, 0, 1, NULL, 'active', 0, 0, 0.0, '2025-11-29 14:00:50', '2025-11-29 17:10:33', NULL),
 (5, 9, 3, 'PRD-IKN001', '8991002101059', 'Ikan Salmon Fillet', 'ikan-salmon-fillet', 'Ikan salmon fillet segar import', 'Ikan salmon fillet segar import Norwegia, kaya omega-3 dan nutrisi.', 120000.00, 180000.00, 15, 5, 'kg', 1000.00, 1, 1, NULL, 'active', 0, 0, 0.0, '2025-11-29 14:00:50', '2025-11-29 14:00:50', NULL),
 (6, 3, 1, 'PRD-SUS001', '8991002101066', 'Susu Ultra Milk', 'susu-ultra-milk', 'Susu UHT full cream 1 liter', 'Susu UHT Ultra Milk full cream kemasan 1 liter, pasteurisasi untuk menjaga nutrisi.', 15000.00, 22000.00, 60, 15, 'pcs', 1000.00, 0, 1, NULL, 'active', 0, 0, 0.0, '2025-11-29 14:00:50', '2025-11-29 14:00:50', NULL),
 (7, 3, 1, 'PRD-TEL001', '8991002101073', 'Telur Ayam Negeri', 'telur-ayam-negeri', 'Telur ayam negeri segar isi 10', 'Telur ayam negeri segar ukuran besar, isi 10 butir per pack.', 18000.00, 25000.00, 80, 20, 'pack', 600.00, 1, 1, NULL, 'active', 0, 0, 0.0, '2025-11-29 14:00:50', '2025-11-29 14:00:50', NULL),
@@ -746,7 +776,9 @@ INSERT INTO `stock_movements` (`id`, `product_id`, `user_id`, `movement_type`, `
 (1, 1, 1, 'in', 100, 0, 100, 'purchase_order', 1, 'PO-001', 'Stok awal', '2025-11-29 14:00:50'),
 (2, 2, 1, 'in', 200, 0, 200, 'purchase_order', 1, 'PO-001', 'Stok awal', '2025-11-29 14:00:50'),
 (3, 1, 2, 'out', 2, 100, 98, 'order', 1, 'ORD-20240115-0001', 'Penjualan online', '2025-11-29 14:00:50'),
-(4, 2, 2, 'out', 3, 200, 197, 'transaction', 1, 'TRX-20240115-0001', 'Penjualan POS', '2025-11-29 14:00:50');
+(4, 2, 2, 'out', 3, 200, 197, 'transaction', 1, 'TRX-20240115-0001', 'Penjualan POS', '2025-11-29 14:00:50'),
+(5, 4, 2, 'out', 1, 39, 38, 'transaction', 3, 'TRX-20251129-7634', 'POS Sale', '2025-11-29 17:10:33'),
+(6, 3, 2, 'out', 1, 24, 23, 'transaction', 4, 'TRX-20251205-7470', 'POS Sale', '2025-12-05 10:46:12');
 
 -- --------------------------------------------------------
 
@@ -846,7 +878,9 @@ CREATE TABLE `transactions` (
 
 INSERT INTO `transactions` (`id`, `transaction_code`, `kasir_id`, `customer_name`, `customer_id`, `subtotal`, `discount_amount`, `discount_type`, `tax_amount`, `grand_total`, `payment_method`, `payment_amount`, `change_amount`, `loyalty_points_earned`, `loyalty_points_used`, `status`, `notes`, `transaction_date`, `created_at`, `updated_at`) VALUES
 (1, 'TRX-20240115-0001', 2, 'Walk-in Customer', NULL, 45000.00, 0.00, NULL, 4500.00, 49500.00, 'cash', 50000.00, 500.00, 0, 0, 'completed', NULL, '2025-11-29', '2025-11-29 14:00:50', '2025-11-29 14:00:50'),
-(2, 'TRX-20240115-0002', 2, 'Budi Santoso', NULL, 180000.00, 5000.00, NULL, 17500.00, 192500.00, 'debit', 200000.00, 7500.00, 0, 0, 'completed', NULL, '2025-11-29', '2025-11-29 14:00:50', '2025-11-29 14:00:50');
+(2, 'TRX-20240115-0002', 2, 'Budi Santoso', NULL, 180000.00, 5000.00, NULL, 17500.00, 192500.00, 'debit', 200000.00, 7500.00, 0, 0, 'completed', NULL, '2025-11-29', '2025-11-29 14:00:50', '2025-11-29 14:00:50'),
+(3, 'TRX-20251129-7634', 2, 'Walk-in Customer', NULL, 45000.00, 9.00, NULL, 4500.00, 49491.00, 'credit', 50000.00, 509.00, 0, 0, 'completed', NULL, '2025-11-30', '2025-11-29 17:10:33', '2025-11-29 17:10:33'),
+(4, 'TRX-20251205-7470', 2, 'Walk-in Customer', NULL, 120000.00, 0.00, NULL, 12000.00, 132000.00, 'cash', 133000.00, 1000.00, 0, 0, 'completed', NULL, '2025-12-05', '2025-12-05 10:46:12', '2025-12-05 10:46:12');
 
 --
 -- Triggers `transactions`
@@ -885,7 +919,9 @@ CREATE TABLE `transaction_details` (
 INSERT INTO `transaction_details` (`id`, `transaction_id`, `product_id`, `product_name`, `quantity`, `price`, `subtotal`, `created_at`) VALUES
 (1, 1, 2, 'Pisang Ambon', 3, 15000.00, 45000.00, '2025-11-29 14:00:50'),
 (2, 2, 4, 'Daging Ayam Fillet', 2, 45000.00, 90000.00, '2025-11-29 14:00:50'),
-(3, 2, 5, 'Ikan Salmon Fillet', 1, 180000.00, 90000.00, '2025-11-29 14:00:50');
+(3, 2, 5, 'Ikan Salmon Fillet', 1, 180000.00, 90000.00, '2025-11-29 14:00:50'),
+(4, 3, 4, 'Daging Ayam Fillet', 1, 45000.00, 45000.00, '2025-11-29 17:10:33'),
+(5, 4, 3, 'Daging Sapi Premium', 1, 120000.00, 120000.00, '2025-12-05 10:46:12');
 
 -- --------------------------------------------------------
 
@@ -916,10 +952,12 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `username`, `email`, `password`, `full_name`, `phone`, `role`, `foto_profil`, `status`, `email_verified_at`, `remember_token`, `last_login_at`, `created_at`, `updated_at`, `deleted_at`) VALUES
-(1, 'admin', 'admin@freshmart.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Administrator', NULL, 'admin', NULL, 'active', NULL, NULL, NULL, '2025-11-29 14:00:50', '2025-11-29 14:00:50', NULL),
-(2, 'kasir1', 'kasir@freshmart.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Kasir Utama', NULL, 'kasir', NULL, 'active', NULL, NULL, NULL, '2025-11-29 14:00:50', '2025-11-29 14:00:50', NULL),
+(1, 'admin', 'admin@freshmart.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Administrator', NULL, 'admin', NULL, 'active', NULL, NULL, '2025-12-05 10:44:16', '2025-11-29 14:00:50', '2025-12-05 10:44:16', NULL),
+(2, 'kasir1', 'kasir@freshmart.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Kasir Utama', NULL, 'kasir', NULL, 'active', NULL, NULL, '2025-12-05 10:45:20', '2025-11-29 14:00:50', '2025-12-05 10:45:20', NULL),
 (3, 'manager1', 'manager@freshmart.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Manager Toko', NULL, 'manager', NULL, 'active', NULL, NULL, NULL, '2025-11-29 14:00:50', '2025-11-29 14:00:50', NULL),
-(4, 'customer1', 'customer@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'John Customer', NULL, 'customer', NULL, 'active', NULL, NULL, NULL, '2025-11-29 14:00:50', '2025-11-29 14:00:50', NULL);
+(4, 'customer1', 'customer@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'John Customer', NULL, 'customer', NULL, 'active', NULL, NULL, NULL, '2025-11-29 14:00:50', '2025-11-29 14:00:50', NULL),
+(15, 'azizahputrireginagma', 'azizahputriregina@gmail.com', '$2y$10$I08q/UyHmYqyrQmjX0C7xu.HbFgQQ6KwbSk89EgeXJedrHwVRU9Wy', 'Azizah Regina', '3284', 'customer', NULL, 'active', NULL, NULL, '2025-11-30 13:53:56', '2025-11-30 13:09:02', '2025-11-30 13:53:56', NULL),
+(16, 'mantapgmailcom', 'mantap@gmail.com', '$2y$10$e6lKCXfVKK8yTPdsGMUx/ONWngKZubiPQcLeEn/7UrgvkXIQibfim', 'Azizah Regina', '3284', 'customer', NULL, 'active', NULL, NULL, NULL, '2025-11-30 13:10:44', '2025-11-30 13:10:44', NULL);
 
 -- --------------------------------------------------------
 
@@ -952,8 +990,11 @@ CREATE TABLE `vouchers` (
 --
 
 INSERT INTO `vouchers` (`id`, `code`, `nama_voucher`, `description`, `discount_type`, `discount_value`, `min_purchase`, `max_discount`, `usage_limit`, `usage_per_customer`, `usage_count`, `start_date`, `end_date`, `is_active`, `applicable_to`, `created_at`, `updated_at`) VALUES
-(1, 'WELCOME10', 'Welcome Discount 10%', 'Diskon 10% untuk pembelian pertama', 'percentage', 10.00, 100000.00, 50000.00, 1000, 1, 0, '2024-01-01 00:00:00', '2024-12-31 23:59:59', 1, 'all', '2025-11-29 14:00:50', '2025-11-29 14:00:50'),
-(2, 'FREESHIP', 'Free Shipping', 'Gratis ongkos kirim tanpa minimum', 'fixed', 15000.00, 0.00, 15000.00, 500, 1, 0, '2024-01-01 00:00:00', '2024-12-31 23:59:59', 1, 'all', '2025-11-29 14:00:50', '2025-11-29 14:00:50');
+(1, 'WELCOME10', 'Welcome Discount 10%', 'Diskon 10% untuk pembelian pertama', 'percentage', 10.00, 100000.00, 50000.00, 1000, 1, 0, '2024-01-01 00:00:00', '2026-12-31 23:59:59', 1, 'all', '2025-11-29 14:00:50', '2025-12-05 11:44:30'),
+(2, 'FREESHIP', 'Free Shipping', 'Gratis ongkos kirim tanpa minimum', 'fixed', 15000.00, 0.00, 15000.00, 500, 1, 0, '2024-01-01 00:00:00', '2026-12-31 23:59:59', 1, 'all', '2025-11-29 14:00:50', '2025-12-05 11:44:30'),
+(3, 'SAVE20K', 'Save Rp 20.000', 'Diskon Rp 20.000 untuk belanja minimal Rp 200.000', 'fixed', 20000.00, 200000.00, 20000.00, 500, 1, 0, '2024-01-01 00:00:00', '2026-12-31 23:59:59', 1, 'all', '2025-12-05 11:44:30', '2025-12-05 11:44:30'),
+(4, 'MEGA50', 'Mega Sale 50%', 'Diskon 50% hingga Rp 100.000 untuk belanja minimal Rp 300.000', 'percentage', 50.00, 300000.00, 100000.00, 100, 1, 0, '2024-01-01 00:00:00', '2026-12-31 23:59:59', 1, 'all', '2025-12-05 11:44:30', '2025-12-05 11:44:30'),
+(5, 'NEWUSER', 'New User Special', 'Diskon Rp 25.000 tanpa minimum belanja untuk user baru', 'fixed', 25000.00, 0.00, 25000.00, 1000, 1, 0, '2024-01-01 00:00:00', '2026-12-31 23:59:59', 1, 'all', '2025-12-05 11:44:30', '2025-12-05 11:44:30');
 
 -- --------------------------------------------------------
 
@@ -1290,7 +1331,7 @@ ALTER TABLE `voucher_usage`
 -- AUTO_INCREMENT for table `activity_logs`
 --
 ALTER TABLE `activity_logs`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- AUTO_INCREMENT for table `addresses`
@@ -1320,13 +1361,13 @@ ALTER TABLE `categories`
 -- AUTO_INCREMENT for table `contact_messages`
 --
 ALTER TABLE `contact_messages`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `customers`
 --
 ALTER TABLE `customers`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `employees_shifts`
@@ -1362,7 +1403,7 @@ ALTER TABLE `products`
 -- AUTO_INCREMENT for table `product_categories`
 --
 ALTER TABLE `product_categories`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
 -- AUTO_INCREMENT for table `product_images`
@@ -1404,7 +1445,7 @@ ALTER TABLE `purchase_order_details`
 -- AUTO_INCREMENT for table `stock_movements`
 --
 ALTER TABLE `stock_movements`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `suppliers`
@@ -1422,25 +1463,25 @@ ALTER TABLE `system_settings`
 -- AUTO_INCREMENT for table `transactions`
 --
 ALTER TABLE `transactions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `transaction_details`
 --
 ALTER TABLE `transaction_details`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT for table `vouchers`
 --
 ALTER TABLE `vouchers`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `voucher_usage`

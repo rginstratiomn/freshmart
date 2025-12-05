@@ -11,7 +11,7 @@ $min_price = $_GET['min_price'] ?? '';
 $max_price = $_GET['max_price'] ?? '';
 $sort = $_GET['sort'] ?? 'newest';
 
-// Build base query - FIXED: Gunakan subquery untuk kategori
+// Build base query
 $query = "SELECT p.*, 
                  (SELECT c.nama_kategori 
                   FROM product_categories pc 
@@ -33,7 +33,6 @@ if(!empty($search)) {
 }
 
 if(!empty($category_id)) {
-    // Untuk filter kategori, gunakan EXISTS
     $conditions[] = "EXISTS (SELECT 1 FROM product_categories pc WHERE pc.product_id = p.id AND pc.category_id = ?)";
     $params[] = $category_id;
 }
@@ -48,7 +47,6 @@ if(!empty($max_price)) {
     $params[] = $max_price;
 }
 
-// Add conditions to query
 if (!empty($conditions)) {
     $query .= " AND " . implode(" AND ", $conditions);
 }
@@ -88,7 +86,7 @@ try {
     $products = [];
 }
 
-// Get total count for pagination - FIXED: Query yang sama tanpa pagination
+// Get total count for pagination
 $count_query = "SELECT COUNT(*) as total 
                 FROM products p 
                 WHERE p.status = 'active' AND p.is_available_online = 1";
@@ -268,7 +266,7 @@ $categories = $categories_stmt->fetchAll(PDO::FETCH_ASSOC);
                                     <?php if($product['stok'] > 0): ?>
                                         <button class="btn btn-primary btn-sm add-to-cart" 
                                                 data-product-id="<?php echo $product['id']; ?>"
-                                                data-product-name="<?php echo $product['nama_produk']; ?>"
+                                                data-product-name="<?php echo htmlspecialchars($product['nama_produk']); ?>"
                                                 data-product-price="<?php echo $product['harga_jual']; ?>">
                                             <i class="fas fa-cart-plus"></i>
                                         </button>
@@ -323,5 +321,77 @@ $categories = $categories_stmt->fetchAll(PDO::FETCH_ASSOC);
     <?php include 'includes/footer.php'; ?>
 
     <script src="assets/js/main.js"></script>
+    <script>
+        // Add to Cart Functionality
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.add-to-cart')) {
+                const button = e.target.closest('.add-to-cart');
+                const productId = button.dataset.productId;
+                const productName = button.dataset.productName;
+                const productPrice = button.dataset.productPrice;
+                
+                // Disable button and show loading
+                button.disabled = true;
+                const originalHTML = button.innerHTML;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                
+                // Send AJAX request
+                fetch('cart.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `add_to_cart=1&product_id=${productId}&quantity=1`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show success message
+                        showToast(`${productName} added to cart!`, 'success');
+                        
+                        // Update cart count in header if exists
+                        updateCartCount();
+                        
+                        // Change button temporarily
+                        button.innerHTML = '<i class="fas fa-check"></i>';
+                        setTimeout(() => {
+                            button.innerHTML = originalHTML;
+                            button.disabled = false;
+                        }, 1500);
+                    } else {
+                        showToast('Failed to add to cart', 'error');
+                        button.innerHTML = originalHTML;
+                        button.disabled = false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showToast('Failed to add to cart', 'error');
+                    button.innerHTML = originalHTML;
+                    button.disabled = false;
+                });
+            }
+        });
+        
+        // Update cart count in header
+        function updateCartCount() {
+            // This assumes you have a cart count element in your header
+            // Adjust selector as needed based on your header structure
+            const cartCountElement = document.querySelector('.cart-count');
+            if (cartCountElement) {
+                fetch('get_cart_count.php')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.count !== undefined) {
+                            cartCountElement.textContent = data.count;
+                            if (data.count > 0) {
+                                cartCountElement.classList.remove('hidden');
+                            }
+                        }
+                    })
+                    .catch(error => console.error('Error updating cart count:', error));
+            }
+        }
+    </script>
 </body>
 </html>

@@ -338,7 +338,7 @@ function showConfirmModal(title, message, confirmCallback, iconClass = 'fas fa-t
 }
 
 // Toast Notification System
-function showToast(message, type = 'success') {
+function showToast(message, type = 'success', duration = 2000) {
     // Remove existing toast if any
     const existingToast = document.getElementById('customToast');
     if (existingToast) {
@@ -371,9 +371,9 @@ function showToast(message, type = 'success') {
     
     const config = typeConfig[type] || typeConfig.success;
     
-    // Create toast HTML
+    // Create toast HTML - positioned below navbar
     const toastHTML = `
-        <div id="customToast" class="fixed top-4 right-4 ${config.bg} text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-3 z-50 border ${config.border} transform transition-all duration-300 translate-y-0 opacity-100 max-w-sm">
+        <div id="customToast" style="position: fixed; top: 80px; right: 16px; z-index: 9999;" class="${config.bg} text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-3 border ${config.border} transform transition-all duration-300 translate-y-0 opacity-100 max-w-sm">
             <i class="${config.icon} text-lg"></i>
             <span class="flex-1">${message}</span>
             <button type="button" class="toast-close ml-2 text-white hover:text-gray-200">
@@ -393,10 +393,10 @@ function showToast(message, type = 'success') {
         hideToast(toast);
     });
     
-    // Auto hide after 5 seconds
-    const autoHide = setTimeout(() => {
+    // Auto hide after specified duration
+    let autoHide = setTimeout(() => {
         hideToast(toast);
-    }, 5000);
+    }, duration);
     
     // Function to hide toast with animation
     function hideToast(toastElement) {
@@ -416,9 +416,9 @@ function showToast(message, type = 'success') {
     });
     
     toast.addEventListener('mouseleave', () => {
-        setTimeout(() => {
+        autoHide = setTimeout(() => {
             hideToast(toast);
-        }, 5000);
+        }, duration);
     });
 }
 

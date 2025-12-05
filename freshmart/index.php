@@ -60,9 +60,7 @@ try {
                     <a href="cart.php" class="nav-link">
                         <i class="fas fa-shopping-cart"></i>
                         Cart
-                        <?php if (getCartItemCount() > 0): ?>
-                            <span class="cart-badge"><?php echo getCartItemCount(); ?></span>
-                        <?php endif; ?>
+                        
                     </a>
                 </li>
                 <?php if(isLoggedIn()): ?>
